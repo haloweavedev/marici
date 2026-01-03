@@ -9,7 +9,7 @@
     <style>
         :root {
             --bg-color: #05070a;
-            --card-bg: rgba(20, 24, 35, 0.7);
+            --card-bg: rgba(20, 24, 35, 0.75);
             --text-main: #e0e0e0;
             --text-muted: #a0a0a0;
             --accent: #c4d7ed;
@@ -23,12 +23,13 @@
             font-family: 'Cinzel', 'Georgia', serif;
             background: radial-gradient(circle at 50% 100%, #1a202c 0%, #05070a 100%);
             color: var(--text-main);
-            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Strict no-scroll */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         h1, h2, h3 {
@@ -40,25 +41,31 @@
         .container {
             width: 100%;
             max-width: 480px;
-            padding: 20px;
+            height: 100%;
+            padding: 10px;
             box-sizing: border-box;
             opacity: 0;
             transition: opacity 1s ease-in-out;
-            display: none; /* Hidden by default until loaded */
+            display: none;
+            display: flex; /* Flex to manage vertical space */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .container.visible {
             opacity: 1;
-            display: block;
+            display: flex;
         }
 
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 2vh;
+            flex-shrink: 0;
         }
 
         header h1 {
-            font-size: 1.8rem;
+            font-size: clamp(1.2rem, 3vh, 1.8rem);
             color: var(--accent);
             text-transform: uppercase;
             text-shadow: 0 0 10px var(--moon-glow);
@@ -70,20 +77,34 @@
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            padding: 40px 20px;
+            padding: 3vh 20px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 25px;
+            gap: 2vh;
+            width: 100%;
+            max-height: 85vh; /* Ensure card doesn't overflow viewport */
+            box-sizing: border-box;
+            overflow-y: auto; /* Internal scroll if absolutely needed on tiny screens */
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+        }
+        
+        .moon-card::-webkit-scrollbar {
+            display: none; /* Hide scrollbar Chrome/Safari */
         }
 
         .moon-visual {
-            width: 200px;
-            height: 200px;
+            width: 25vh; /* Responsive size based on viewport height */
+            height: 25vh;
+            max-width: 200px;
+            max-height: 200px;
+            min-width: 120px;
+            min-height: 120px;
             position: relative;
             filter: drop-shadow(0 0 20px var(--moon-glow));
+            flex-shrink: 0;
         }
 
         /* SVG Styles */
@@ -102,60 +123,65 @@
 
         .data-section {
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .phase-name {
-            font-size: 1.5rem;
+            font-size: clamp(1.1rem, 2.5vh, 1.5rem);
             color: #fff;
-            margin-bottom: 5px;
+            margin-bottom: 0.5vh;
         }
 
         .illumination {
             font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin-bottom: 20px;
+            margin-bottom: 2vh;
         }
 
         .zodiac-info {
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 20px;
-            margin-top: 10px;
+            padding-top: 1.5vh;
+            margin-top: 0.5vh;
+            width: 80%;
         }
 
         .zodiac-sign {
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 2vh, 1.2rem);
             color: var(--text-main);
         }
 
         .zodiac-degree {
             font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 5px;
         }
 
         .time-display {
             font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--accent);
-            margin-top: 10px;
+            margin-top: 1.5vh;
             letter-spacing: 1px;
             opacity: 0.8;
         }
 
         .location-info {
-            margin-top: 30px;
+            margin-top: 2vh;
             font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: rgba(255, 255, 255, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 5px;
             text-align: center;
+            flex-shrink: 0;
         }
 
         /* Loading / Standby State */
@@ -177,8 +203,8 @@
         }
 
         .loader-moon {
-            width: 80px;
-            height: 80px;
+            width: 15vmin;
+            height: 15vmin;
             border-radius: 50%;
             background: transparent;
             border: 2px solid rgba(196, 215, 237, 0.1);
@@ -198,7 +224,7 @@
         }
 
         .loader-text {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--accent);
             letter-spacing: 3px;
             text-transform: uppercase;
@@ -216,7 +242,7 @@
 
         /* AI Section Styles */
         .ai-section {
-            margin-top: 25px;
+            margin-top: 2vh;
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -227,9 +253,9 @@
             background: rgba(196, 215, 237, 0.05);
             border: 1px solid rgba(196, 215, 237, 0.2);
             color: var(--accent);
-            padding: 12px 24px;
+            padding: 10px 20px;
             font-family: 'Cinzel', serif;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             letter-spacing: 2px;
             cursor: pointer;
             position: relative;
@@ -252,10 +278,10 @@
         }
 
         .ai-message {
-            margin-top: 20px;
+            margin-top: 1.5vh;
             font-family: 'Georgia', serif;
-            font-size: 1rem;
-            line-height: 1.6;
+            font-size: 0.9rem;
+            line-height: 1.4;
             color: #fff;
             font-style: italic;
             text-shadow: 0 0 5px rgba(0,0,0,0.5);
@@ -263,7 +289,8 @@
             transform: translateY(10px);
             transition: all 0.6s ease-out;
             min-height: 0;
-            max-width: 90%;
+            max-width: 95%;
+            text-align: center;
         }
 
         .ai-message.visible {
@@ -280,7 +307,31 @@
             0%, 100% { box-shadow: 0 0 20px rgba(196, 215, 237, 0.1); }
             50% { box-shadow: 0 0 40px rgba(196, 215, 237, 0.4); }
         }
-
+        
+        /* Mobile Specific Adjustments */
+        @media (max-width: 400px), (max-height: 700px) {
+             .moon-card {
+                 padding: 2vh 15px;
+                 gap: 1.5vh;
+             }
+             .moon-visual {
+                 width: 20vh;
+                 height: 20vh;
+             }
+             header h1 {
+                 font-size: 1.4rem;
+             }
+             .phase-name {
+                 font-size: 1.2rem;
+             }
+             .zodiac-sign {
+                 font-size: 1rem;
+             }
+             .mystic-btn {
+                 padding: 8px 16px;
+                 font-size: 0.7rem;
+             }
+        }
     </style>
 </head>
 <body>
