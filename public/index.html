@@ -605,6 +605,207 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-muted);
         }
+
+        /* Sacred Secretion Card */
+        .secretion-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.3s var(--ease-out-expo);
+        }
+
+        .secretion-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .secretion-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .secretion-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f6d365, #fda085);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .secretion-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .secretion-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Sun Sign Selector */
+        .sign-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .sign-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-out-expo);
+        }
+
+        .sign-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(167, 139, 250, 0.1);
+        }
+
+        .sign-btn.active {
+            border-color: var(--accent-primary);
+            background: var(--accent-glow);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .sign-btn-symbol {
+            font-size: 1.2rem;
+        }
+
+        .sign-btn-name {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sign-btn.active .sign-btn-name {
+            color: var(--accent-primary);
+        }
+
+        /* Fasting Dates Display */
+        .fasting-dates {
+            display: none;
+        }
+
+        .fasting-dates.visible {
+            display: block;
+        }
+
+        .fasting-intro {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .fasting-intro strong {
+            color: var(--accent-primary);
+        }
+
+        .date-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .date-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .date-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, rgba(246, 211, 101, 0.2), rgba(253, 160, 133, 0.2));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .date-details {
+            flex: 1;
+        }
+
+        .date-range {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .date-days {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .date-label {
+            font-size: 0.65rem;
+            color: var(--warning);
+            background: rgba(252, 211, 77, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .chrism-info {
+            margin-top: 16px;
+            padding: 14px;
+            background: rgba(246, 211, 101, 0.05);
+            border: 1px solid rgba(246, 211, 101, 0.15);
+            border-radius: 10px;
+        }
+
+        .chrism-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            color: var(--warning);
+            margin-bottom: 8px;
+        }
+
+        .chrism-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 400px) {
+            .sign-selector {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .sign-btn {
+                padding: 8px 4px;
+            }
+            .sign-btn-symbol {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -689,6 +890,41 @@
                 <span class="spinner"></span>
                 <span class="btn-text">Generate Ritual Guide</span>
             </button>
+        </div>
+
+        <!-- Sacred Secretion Card -->
+        <div class="secretion-card">
+            <div class="secretion-header">
+                <div class="secretion-icon">&#9741;</div>
+                <div>
+                    <div class="secretion-title">Sacred Secretion Calendar</div>
+                    <div class="secretion-subtitle">Chrism fasting dates based on your sun sign</div>
+                </div>
+            </div>
+
+            <div class="sign-selector" id="sign-selector">
+                <!-- Generated by JS -->
+            </div>
+
+            <div class="fasting-dates" id="fasting-dates">
+                <div class="fasting-intro">
+                    When the Moon transits through <strong id="selected-sign-name">your sign</strong>,
+                    the sacred oil (Chrism) descends through your 33 vertebrae.
+                    These are your upcoming fasting windows:
+                </div>
+                <div id="dates-container">
+                    <!-- Generated by JS -->
+                </div>
+                <div class="chrism-info">
+                    <div class="chrism-title">&#128220; About the Sacred Secretion</div>
+                    <div class="chrism-text">
+                        The Chrism (Christ oil) is a sacred fluid that descends from the brain through the 33 vertebrae
+                        when the Moon is in your sun sign. During these 2.5 days each month, fasting and spiritual
+                        practice can help preserve this sacred essence as it makes its journey to the sacral plexus
+                        and back, facilitating spiritual regeneration.
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Location Footer -->
@@ -1012,11 +1248,193 @@
             btn.disabled = false;
         }
 
+        // =====================
+        // SACRED SECRETION / CHRISM CALENDAR
+        // =====================
+
+        // Initialize sign selector buttons
+        function initSignSelector() {
+            const container = document.getElementById('sign-selector');
+            container.innerHTML = ZODIAC_SIGNS.map((sign, index) => `
+                <div class="sign-btn" data-sign="${index}" onclick="selectSunSign(${index})">
+                    <span class="sign-btn-symbol">${sign.emoji}</span>
+                    <span class="sign-btn-name">${sign.name}</span>
+                </div>
+            `).join('');
+        }
+
+        // Handle sun sign selection
+        function selectSunSign(signIndex) {
+            // Update active state
+            document.querySelectorAll('.sign-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.sign-btn[data-sign="${signIndex}"]`).classList.add('active');
+
+            // Update sign name in intro
+            document.getElementById('selected-sign-name').innerText = ZODIAC_SIGNS[signIndex].name;
+
+            // Calculate and display fasting dates
+            const dates = calculateMoonInSign(signIndex, 3);
+            displayFastingDates(dates, signIndex);
+
+            // Show the fasting dates section
+            document.getElementById('fasting-dates').classList.add('visible');
+        }
+
+        // Calculate when moon will be in a specific sign
+        // Returns array of { start: Date, end: Date } for next N occurrences
+        function calculateMoonInSign(signIndex, count = 3) {
+            const results = [];
+            const signStartDegree = signIndex * 30;
+            const signEndDegree = (signIndex + 1) * 30;
+
+            let searchDate = new Date();
+            let iterations = 0;
+            const maxIterations = 100; // Safety limit
+
+            while (results.length < count && iterations < maxIterations) {
+                iterations++;
+
+                // Find when moon enters this sign
+                const entryDate = findMoonEnteringSign(searchDate, signStartDegree);
+                if (!entryDate) break;
+
+                // Find when moon exits this sign
+                const exitDate = findMoonExitingSign(entryDate, signEndDegree);
+                if (!exitDate) break;
+
+                // Only add if the entry is in the future (or today)
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (exitDate >= today) {
+                    results.push({
+                        start: entryDate,
+                        end: exitDate
+                    });
+                }
+
+                // Search from after this transit
+                searchDate = new Date(exitDate.getTime() + 24 * 60 * 60 * 1000);
+            }
+
+            return results;
+        }
+
+        // Find when moon enters a sign (crosses a degree threshold)
+        function findMoonEnteringSign(startDate, targetDegree) {
+            let date = new Date(startDate);
+            const maxDays = 35; // Moon cycle is ~27.3 days
+
+            for (let i = 0; i < maxDays * 24; i++) { // Check hourly
+                const vector = Astronomy.GeoVector(Astronomy.Body.Moon, date, true);
+                const ecliptic = Astronomy.Ecliptic(vector);
+                let lon = ecliptic.elon % 360;
+                if (lon < 0) lon += 360;
+
+                // Check if we're at or just past the target degree
+                const prevDate = new Date(date.getTime() - 60 * 60 * 1000);
+                const prevVector = Astronomy.GeoVector(Astronomy.Body.Moon, prevDate, true);
+                const prevEcliptic = Astronomy.Ecliptic(prevVector);
+                let prevLon = prevEcliptic.elon % 360;
+                if (prevLon < 0) prevLon += 360;
+
+                // Handle wrap-around at 0/360
+                if (targetDegree === 0) {
+                    if (prevLon > 350 && lon < 10) return date;
+                } else {
+                    if (prevLon < targetDegree && lon >= targetDegree) return date;
+                    // Handle case where we start already in the sign
+                    if (i === 0 && lon >= targetDegree && lon < targetDegree + 30) return date;
+                }
+
+                date = new Date(date.getTime() + 60 * 60 * 1000); // Add 1 hour
+            }
+            return null;
+        }
+
+        // Find when moon exits a sign
+        function findMoonExitingSign(startDate, targetDegree) {
+            let date = new Date(startDate);
+
+            for (let i = 0; i < 4 * 24; i++) { // Moon spends ~2.5 days in each sign
+                const vector = Astronomy.GeoVector(Astronomy.Body.Moon, date, true);
+                const ecliptic = Astronomy.Ecliptic(vector);
+                let lon = ecliptic.elon % 360;
+                if (lon < 0) lon += 360;
+
+                const effectiveTarget = targetDegree % 360;
+
+                // Handle wrap-around
+                if (effectiveTarget === 0) {
+                    if (lon >= 0 && lon < 10) return date;
+                } else {
+                    if (lon >= effectiveTarget) return date;
+                }
+
+                date = new Date(date.getTime() + 60 * 60 * 1000); // Add 1 hour
+            }
+            return date; // Return current date if not found
+        }
+
+        // Display fasting dates in the UI
+        function displayFastingDates(dates, signIndex) {
+            const container = document.getElementById('dates-container');
+            const sign = ZODIAC_SIGNS[signIndex];
+
+            if (dates.length === 0) {
+                container.innerHTML = '<div class="fasting-intro">Unable to calculate dates. Please try again.</div>';
+                return;
+            }
+
+            container.innerHTML = dates.map((period, index) => {
+                const startStr = formatDate(period.start);
+                const endStr = formatDate(period.end);
+                const daysStr = formatDayRange(period.start, period.end);
+                const isNow = isCurrentlyActive(period.start, period.end);
+
+                return `
+                    <div class="date-card">
+                        <div class="date-icon">${sign.emoji}</div>
+                        <div class="date-details">
+                            <div class="date-range">${startStr} – ${endStr}</div>
+                            <div class="date-days">${daysStr}</div>
+                        </div>
+                        ${isNow ? '<div class="date-label">Active Now</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Format date for display
+        function formatDate(date) {
+            return date.toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Format day range (e.g., "Friday – Sunday")
+        function formatDayRange(start, end) {
+            const startDay = start.toLocaleDateString(undefined, { weekday: 'long' });
+            const endDay = end.toLocaleDateString(undefined, { weekday: 'long' });
+            return `${startDay} – ${endDay}`;
+        }
+
+        // Check if period is currently active
+        function isCurrentlyActive(start, end) {
+            const now = new Date();
+            return now >= start && now <= end;
+        }
+
         function init() {
             if (typeof Astronomy === 'undefined') {
                 document.querySelector('.loading-text').innerText = "Failed to load astronomy library";
                 return;
             }
+
+            // Initialize sign selector
+            initSignSelector();
 
             let lat = 51.4769;
             let lon = -0.0005;
