@@ -14,6 +14,7 @@
             --text-muted: #a0a0a0;
             --accent: #c4d7ed;
             --moon-glow: rgba(196, 215, 237, 0.2);
+            --loading-pulse: #c4d7ed;
         }
 
         body {
@@ -27,6 +28,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         h1, h2, h3 {
@@ -40,6 +42,14 @@
             max-width: 480px;
             padding: 20px;
             box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            display: none; /* Hidden by default until loaded */
+        }
+
+        .container.visible {
+            opacity: 1;
+            display: block;
         }
 
         header {
@@ -127,6 +137,15 @@
             margin-top: 5px;
         }
 
+        .time-display {
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-top: 10px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
         .location-info {
             margin-top: 30px;
             font-family: 'Helvetica Neue', sans-serif;
@@ -136,19 +155,88 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
+            text-align: center;
         }
 
-        .loading {
-            font-size: 0.9rem;
+        /* Loading / Standby State */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 50%, #1a202c 0%, #05070a 100%);
+            z-index: 999;
+            transition: opacity 0.8s ease-out;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-moon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid rgba(196, 215, 237, 0.1);
+            box-shadow: 0 0 20px rgba(196, 215, 237, 0.1);
+            position: relative;
+            animation: pulse-glow 3s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        .loader-moon::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%;
+            border-top: 2px solid var(--accent);
+            animation: spin 2s linear infinite;
+        }
+
+        .loader-text {
+            font-size: 1.1rem;
+            color: var(--accent);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .loader-subtext {
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 0.8rem;
             color: var(--text-muted);
+            margin-top: 10px;
             font-style: italic;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(196, 215, 237, 0.1); }
+            50% { box-shadow: 0 0 40px rgba(196, 215, 237, 0.4); }
         }
 
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <!-- Loading / Standby Card -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loader-moon"></div>
+        <div class="loader-text">Aligning celestial sphere</div>
+        <div class="loader-subtext">Seeking observer coordinates...</div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="container" id="main-container">
         <header>
             <h1>godrays</h1>
         </header>
@@ -166,11 +254,15 @@
                     <div class="zodiac-sign" id="zodiac-sign">--</div>
                     <div class="zodiac-degree" id="zodiac-degree">--</div>
                 </div>
+
+                <div class="time-display" id="time-display">
+                    <!-- Dynamic Time -->
+                </div>
             </div>
         </div>
 
         <div class="location-info" id="location-display">
-            <span>Locating observer...</span>
+            <!-- Dynamic Location -->
         </div>
     </div>
 
@@ -183,7 +275,6 @@
         ];
 
         function getZodiacSign(longitude) {
-            // Normalize to 0-360 just in case
             let lon = longitude % 360;
             if (lon < 0) lon += 360;
             
@@ -196,9 +287,6 @@
         }
 
         function getPhaseName(phaseAngle) {
-            // phaseAngle is 0..360. 
-            // 0=New, 90=First Quarter, 180=Full, 270=Last Quarter
-            // We define ranges.
             const p = phaseAngle % 360;
             if (p < 2) return "New Moon";
             if (p < 88) return "Waxing Crescent";
@@ -212,24 +300,8 @@
         }
 
         function renderMoonSVG(phaseFraction, phaseAngle) {
-            // phaseFraction: 0.0 (New) to 1.0 (Full) - This is illuminated AREA fraction.
-            // But visually, we need to know the 'phase' (0..1 cycle) to draw the shadow side correctly.
-            // Using phaseAngle is better for drawing. 
-            // 0 deg = New, 180 deg = Full.
-            // If angle < 180, Waxing (Right side lit in N. Hemisphere). 
-            // If angle > 180, Waning (Left side lit in N. Hemisphere).
+            const r = 50; 
             
-            // Note: This visualization assumes a standard "North Up" orientation.
-            
-            // We draw a circle for the base (dark).
-            // Then we draw the lit part.
-            // The terminator is an ellipse arc.
-            
-            const r = 50; // Radius
-            const cx = 50;
-            const cy = 50;
-            
-            // Normalize angle to 0-360
             let angle = phaseAngle % 360;
             if (angle < 0) angle += 360;
 
@@ -237,101 +309,20 @@
             const isFull = Math.abs(angle - 180) < 0.1;
             const isNew = Math.abs(angle) < 0.1 || Math.abs(angle - 360) < 0.1;
 
-            // Calculate the width of the lit/shadow ellipse
-            // When angle is 0 or 180, width is 0 (circle).
-            // When angle is 90 or 270, width is 0 (straight line terminator).
-            // Wait, standard math: Terminator x projection is r * cos(angle).
-            
-            // Let's use a path string.
-            // M 50,0 (Top)
-            // A 50,50 0 1,1 50,100 (Right Semi-circle)
-            // A ... (Terminator curve back to top)
-            
-            // Lit logic:
-            // New Moon (0): All dark.
-            // Full Moon (180): All light.
-            // Waxing (0-180): Right edge is lit. Terminator moves from right to left.
-            // Waning (180-360): Left edge is lit. Terminator moves from right to left (covering the right side).
-            
-            // Actually, simpler logic:
-            // 1. Draw full dark circle.
-            // 2. Draw a shape for the light.
-            
-            // SVG Path Command for the light part:
-            // We always start at Top (50, 0) and end at Bottom (50, 100).
-            
-            // The outer arc is always a semi-circle on the lit side.
-            // The inner arc (terminator) is an elliptical arc.
-            // radius x of the terminator = 50 * cos(angle).
-            
-            // Let's create the path d.
             let d = "";
-            
-            // Helper to get elliptical arc radius x. 
-            // It varies from 50 (at New/Full) to 0 (at Quarters).
-            // The direction of the curve flips based on phase.
-            
-            // However, it's easier to think about:
-            // Waxing: Lit on Right.
-            //   0-90:  Crescent. Outer arc Right. Inner arc Right (convex).
-            //   90-180: Gibbous. Outer arc Right. Inner arc Left (concave).
-            // Waning: Lit on Left.
-            //   180-270: Gibbous. Outer arc Left. Inner arc Right (concave).
-            //   270-360: Crescent. Outer arc Left. Inner arc Left (convex).
-            
-            // Let 'sweep' flag in SVG Arc determine convexity.
-            
-            // Adjust angle so 0 is New, 180 is Full.
-            // cos(0) = 1, cos(180) = -1.
-            // width = r * cos(angle). 
-            
-            // Let's rely on `phase_angle` directly.
-            // Astronomy Engine returns angle in degrees.
-            
-            // Radius of terminator
-            // We need the angle in radians for Math.cos
             const rad = angle * (Math.PI / 180);
             const terminatorRadius = Math.abs(50 * Math.cos(rad));
-            const sweep = angle < 180 ? 1 : 0; // 1 for Right side arc (Waxing), 0 for Left (Waning)
-            
-            // Direction of the elliptical arc (terminator)
-            // If Waxing Crescent (0-90): Lit is on Right. Inner curve bulges to Right.
-            // If Waxing Gibbous (90-180): Lit is on Right. Inner curve bulges to Left.
-            
-            // Let's construct the path "d".
-            // Move to Top (50, 0)
+            const sweep = angle < 180 ? 1 : 0; 
             
             if (isNew) {
-               // Draw nothing (dark circle already there as background)
                d = ""; 
             } else if (isFull) {
-               // Full circle
                d = "M 50,0 A 50,50 0 1,1 50,100 A 50,50 0 1,1 50,0";
             } else {
-               // Calculate direction of the outer arc (the limb)
-               // Waxing (0-180) -> Right Limb -> Sweep 1
-               // Waning (180-360) -> Left Limb -> Sweep 0
                const limbSweep = (angle < 180) ? 1 : 0;
-               
-               // Calculate direction of the inner arc (terminator)
-               // It depends on Gibbous vs Crescent.
-               // Crescent: Terminator bulges same way as Limb.
-               // Gibbous: Terminator bulges opposite way.
-               // 0-90 (Wax Cres): Limb Right, Term Right.
-               // 90-180 (Wax Gib): Limb Right, Term Left.
-               // 180-270 (Wan Gib): Limb Left, Term Right.
-               // 270-360 (Wan Cres): Limb Left, Term Left.
-               
                const termSweep = (angle < 90 || angle > 270) ? 1 : 0; 
-               // Wait, SVG arc sweep: 1 is "positive-angle" direction (clockwise visually? No, it's about left/right relative to path).
-               // Let's just hardcode the 4 quadrants logic to be safe.
-               
-               // Start Top (50, 0)
-               // Arc to Bottom (50, 100) via Limb.
-               // Arc back to Top (50, 0) via Terminator.
                
                let limbArc = `A 50,50 0 0 ${limbSweep} 50,100`;
-               // Terminator arc radius x is 'terminatorRadius'. radius y is 50.
                let termArc = `A ${terminatorRadius},50 0 0 ${termSweep} 50,0`;
                
                d = `M 50,0 ${limbArc} ${termArc} Z`;
@@ -345,25 +336,21 @@
             `;
         }
 
+        // Time updater
+        function updateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('time-display').innerText = now.toLocaleDateString(undefined, options);
+        }
 
-        function updateDashboard(lat, lon) {
+        function updateDashboard(lat, lon, isDefault = false) {
             const date = new Date();
             
             // 1. Calculate Moon Data
             const illum = Astronomy.Illumination(Astronomy.Body.Moon, date);
             
-            // 2. Calculate Zodiac
-            // Use Geocentric for Zodiac signs
+            // 2. Calculate Zodiac (Geocentric)
             const vector = Astronomy.GeoVector(Astronomy.Body.Moon, date, true);
-            // We usually want geocentric ecliptic coordinates for zodiac
-            // But from the observer's location? Astrologers usually use Geocentric (Earth center).
-            // However, the prompt asked for "User Location" first, implying Topocentric?
-            // "Moon Zodiac Sign" is almost always Geocentric Tropical in astrology.
-            // Let's stick to Geocentric for the Sign to be "standard astrology".
-            // If we use the observer vector, it's Topocentric (which varies slightly by parallax).
-            // Let's use Geocentric for Zodiac stability, as users expect standard almanac signs.
-            // Astronomy.GeoVector is geocentric.
-            
             const ecliptic = Astronomy.Ecliptic(vector);
             const zodiac = getZodiacSign(ecliptic.elon);
             
@@ -378,21 +365,37 @@
             
             document.getElementById('moon-container').innerHTML = renderMoonSVG(illum.phase_fraction, illum.phase_angle);
             
-            document.getElementById('location-display').innerText = 
-                `Observer: ${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`;
+            // Try to guess timezone name for better location context
+            let locationText = `Observer Coordinates: ${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`;
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if(tz) locationText += ` (${tz.replace('_', ' ')})`;
+            } catch(e) {}
+
+            if (isDefault) {
+                locationText = "Stargazing from the Void (Default Location)";
+            }
+            
+            document.getElementById('location-display').innerText = locationText;
+
+            // Start clock
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            // Transition UI
+            setTimeout(() => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('main-container').classList.add('visible');
+            }, 800); // Small delay for effect
         }
 
         function init() {
-            // Check if library loaded
             if (typeof Astronomy === 'undefined') {
-                document.getElementById('phase-name').innerText = "Error";
-                document.getElementById('illumination').innerText = "Library failed to load.";
-                document.getElementById('location-display').innerText = "Please check your internet connection and reload.";
-                console.error("Astronomy Engine library not loaded.");
+                document.querySelector('.loader-text').innerText = "Stellar Connection Failed";
+                document.querySelector('.loader-subtext').innerText = "Library could not load. Check internet.";
                 return;
             }
 
-            // Default location (Null Island-ish or Greenwich)
             let lat = 51.4769; 
             let lon = -0.0005;
 
@@ -401,20 +404,20 @@
                     (position) => {
                         lat = position.coords.latitude;
                         lon = position.coords.longitude;
-                        updateDashboard(lat, lon);
+                        updateDashboard(lat, lon, false);
                     },
                     (error) => {
                         console.warn("Geolocation denied/error", error);
-                        document.getElementById('location-display').innerText = "Location access denied. Using default (Greenwich).";
-                        updateDashboard(lat, lon);
-                    }
+                        // Update with default but mark it
+                        updateDashboard(lat, lon, true);
+                    },
+                    { timeout: 10000 } // Wait up to 10s
                 );
             } else {
-                updateDashboard(lat, lon);
+                updateDashboard(lat, lon, true);
             }
         }
 
-        // Run when window is fully loaded (scripts, styles, etc.)
         window.addEventListener('load', init);
 
     </script>
