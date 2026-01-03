@@ -2,405 +2,750 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>godrays | Moon Dashboard</title>
-    <!-- Astronomy Engine -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>godrays | Lunar Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <style>
         :root {
-            --bg-color: #05070a;
-            --card-bg: rgba(20, 24, 35, 0.75);
-            --text-main: #e0e0e0;
-            --text-muted: #a0a0a0;
-            --accent: #c4d7ed;
-            --moon-glow: rgba(196, 215, 237, 0.2);
-            --loading-pulse: #c4d7ed;
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(18, 18, 26, 0.85);
+            --bg-card-hover: rgba(25, 25, 35, 0.9);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(200, 180, 255, 0.15);
+
+            --text-primary: #f5f5f7;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6a6a7a;
+
+            --accent-primary: #c4b5fd;
+            --accent-secondary: #a78bfa;
+            --accent-glow: rgba(167, 139, 250, 0.3);
+
+            --moon-glow: rgba(200, 180, 255, 0.15);
+            --success: #86efac;
+            --warning: #fcd34d;
+
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'Manrope', -apple-system, sans-serif;
+
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Cinzel', 'Georgia', serif;
-            background: radial-gradient(circle at 50% 100%, #1a202c 0%, #05070a 100%);
-            color: var(--text-main);
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden; /* Strict no-scroll */
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(ellipse at 20% 80%, rgba(196, 181, 253, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.8s var(--ease-out-expo), visibility 0.8s;
         }
 
-        h1, h2, h3 {
-            font-weight: 400;
-            letter-spacing: 2px;
-            margin: 0;
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
         }
 
+        .loading-moon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, transparent 50%);
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loading-moon::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+        }
+
+        .loading-text {
+            margin-top: 24px;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* Main Container */
         .container {
             width: 100%;
             max-width: 480px;
-            height: 100%;
-            padding: 10px;
-            box-sizing: border-box;
+            padding: 20px;
+            padding-bottom: 40px;
+            position: relative;
+            z-index: 1;
             opacity: 0;
-            transition: opacity 1s ease-in-out;
-            display: none;
-            display: flex; /* Flex to manage vertical space */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            transform: translateY(20px);
+            transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
         }
 
         .container.visible {
             opacity: 1;
-            display: flex;
+            transform: translateY(0);
         }
 
+        /* Header */
         header {
             text-align: center;
-            margin-bottom: 2vh;
-            flex-shrink: 0;
+            margin-bottom: 24px;
         }
 
-        header h1 {
-            font-size: clamp(1.2rem, 3vh, 1.8rem);
-            color: var(--accent);
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .tagline {
+            font-size: 0.75rem;
+            color: var(--text-muted);
             text-transform: uppercase;
-            text-shadow: 0 0 10px var(--moon-glow);
+            letter-spacing: 3px;
+            font-weight: 500;
         }
 
-        .moon-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 3vh 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        /* Phase Cycle Indicator */
+        .phase-cycle {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2vh;
-            width: 100%;
-            max-height: 85vh; /* Ensure card doesn't overflow viewport */
-            box-sizing: border-box;
-            overflow-y: auto; /* Internal scroll if absolutely needed on tiny screens */
-            scrollbar-width: none; /* Hide scrollbar Firefox */
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+            padding: 12px 0;
         }
-        
-        .moon-card::-webkit-scrollbar {
-            display: none; /* Hide scrollbar Chrome/Safari */
+
+        .phase-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s var(--ease-out-expo);
+            cursor: default;
+            position: relative;
+        }
+
+        .phase-dot.active {
+            background: var(--accent-glow);
+            border-color: var(--accent-primary);
+            transform: scale(1.15);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .phase-dot::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .phase-dot.active::after {
+            opacity: 1;
+            color: var(--accent-primary);
+        }
+
+        /* Moon Card */
+        .moon-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 32px 24px;
+            margin-bottom: 16px;
+            transition: all 0.3s var(--ease-out-expo);
+        }
+
+        .moon-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Moon Visual */
+        .moon-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 28px;
         }
 
         .moon-visual {
-            width: 25vh; /* Responsive size based on viewport height */
-            height: 25vh;
-            max-width: 200px;
-            max-height: 200px;
-            min-width: 120px;
-            min-height: 120px;
+            width: 180px;
+            height: 180px;
             position: relative;
-            filter: drop-shadow(0 0 20px var(--moon-glow));
-            flex-shrink: 0;
+            filter: drop-shadow(0 0 40px var(--moon-glow));
         }
 
-        /* SVG Styles */
-        #moon-svg {
+        #moon-canvas {
             width: 100%;
             height: 100%;
+            border-radius: 50%;
         }
 
-        .moon-disc {
-            fill: #151820; /* Dark part of moon */
-        }
-
-        .moon-light {
-            fill: #e6e6e6; /* Lit part */
-        }
-
-        .data-section {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        /* Moon Info */
+        .moon-info {
+            text-align: center;
         }
 
         .phase-name {
-            font-size: clamp(1.1rem, 2.5vh, 1.5rem);
-            color: #fff;
-            margin-bottom: 0.5vh;
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
         }
 
         .illumination {
-            font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.8rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 2vh;
-        }
-
-        .zodiac-info {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 1.5vh;
-            margin-top: 0.5vh;
-            width: 80%;
-        }
-
-        .zodiac-sign {
-            font-size: clamp(1rem, 2vh, 1.2rem);
-            color: var(--text-main);
-        }
-
-        .zodiac-degree {
-            font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-
-        .time-display {
-            font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.8rem;
-            color: var(--accent);
-            margin-top: 1.5vh;
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+            font-weight: 600;
             letter-spacing: 1px;
-            opacity: 0.8;
-        }
-
-        .location-info {
-            margin-top: 2vh;
-            font-family: 'Helvetica Neue', sans-serif;
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        /* Loading / Standby State */
-        .loading-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at 50% 50%, #1a202c 0%, #05070a 100%);
-            z-index: 999;
-            transition: opacity 0.8s ease-out;
-        }
-
-        .loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loader-moon {
-            width: 15vmin;
-            height: 15vmin;
-            border-radius: 50%;
-            background: transparent;
-            border: 2px solid rgba(196, 215, 237, 0.1);
-            box-shadow: 0 0 20px rgba(196, 215, 237, 0.1);
-            position: relative;
-            animation: pulse-glow 3s infinite ease-in-out;
+            text-transform: uppercase;
             margin-bottom: 20px;
         }
 
-        .loader-moon::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            border-radius: 50%;
-            border-top: 2px solid var(--accent);
-            animation: spin 2s linear infinite;
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+            margin: 20px 0;
         }
 
-        .loader-text {
-            font-size: 1rem;
-            color: var(--accent);
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            text-align: center;
-            opacity: 0.8;
+        /* Zodiac Section */
+        .zodiac-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 16px 0;
         }
 
-        .loader-subtext {
-            font-family: 'Helvetica Neue', sans-serif;
+        .zodiac-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .zodiac-details {
+            text-align: left;
+        }
+
+        .zodiac-sign {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .zodiac-degree {
             font-size: 0.8rem;
             color: var(--text-muted);
-            margin-top: 10px;
-            font-style: italic;
         }
 
-        /* AI Section Styles */
-        .ai-section {
-            margin-top: 2vh;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .mystic-btn {
-            background: rgba(196, 215, 237, 0.05);
-            border: 1px solid rgba(196, 215, 237, 0.2);
-            color: var(--accent);
-            padding: 10px 20px;
-            font-family: 'Cinzel', serif;
+        /* Time Display */
+        .time-display {
+            text-align: center;
+            padding: 16px 0 8px;
             font-size: 0.8rem;
-            letter-spacing: 2px;
-            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        /* Ritual Card */
+        .ritual-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.3s var(--ease-out-expo);
+        }
+
+        .ritual-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .ritual-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .ritual-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .ritual-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .ritual-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* AI Response Area */
+        .ai-content {
+            min-height: 80px;
             position: relative;
-            overflow: hidden;
-            transition: all 0.4s ease;
-            text-transform: uppercase;
-            border-radius: 4px;
         }
 
-        .mystic-btn:hover {
-            background: rgba(196, 215, 237, 0.15);
-            box-shadow: 0 0 15px var(--moon-glow);
-            letter-spacing: 3px;
-        }
-
-        .mystic-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            letter-spacing: 2px;
-        }
-
-        .ai-message {
-            margin-top: 1.5vh;
-            font-family: 'Georgia', serif;
+        .ai-placeholder {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
             font-size: 0.9rem;
-            line-height: 1.4;
-            color: #fff;
-            font-style: italic;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        .ai-response {
             opacity: 0;
             transform: translateY(10px);
-            transition: all 0.6s ease-out;
-            min-height: 0;
-            max-width: 95%;
-            text-align: center;
+            transition: all 0.5s var(--ease-out-expo);
         }
 
-        .ai-message.visible {
+        .ai-response.visible {
             opacity: 1;
             transform: translateY(0);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .ai-section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(196, 215, 237, 0.1); }
-            50% { box-shadow: 0 0 40px rgba(196, 215, 237, 0.4); }
+        .ai-text {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            font-style: italic;
+            margin-bottom: 16px;
         }
-        
-        /* Mobile Specific Adjustments */
-        @media (max-width: 400px), (max-height: 700px) {
-             .moon-card {
-                 padding: 2vh 15px;
-                 gap: 1.5vh;
-             }
-             .moon-visual {
-                 width: 20vh;
-                 height: 20vh;
-             }
-             header h1 {
-                 font-size: 1.4rem;
-             }
-             .phase-name {
-                 font-size: 1.2rem;
-             }
-             .zodiac-sign {
-                 font-size: 1rem;
-             }
-             .mystic-btn {
-                 padding: 8px 16px;
-                 font-size: 0.7rem;
-             }
+
+        .ai-rituals {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ritual-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .ritual-item-icon {
+            font-size: 1rem;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            width: 100%;
+            padding: 14px 24px;
+            margin-top: 16px;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            border: none;
+            border-radius: 12px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--bg-primary);
+            cursor: pointer;
+            transition: all 0.3s var(--ease-out-expo);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .generate-btn .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--bg-primary);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        .generate-btn.loading .spinner {
+            display: inline-block;
+        }
+
+        .generate-btn.loading .btn-text {
+            opacity: 0.8;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Intention Input */
+        .intention-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .intention-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .intention-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            resize: none;
+            transition: all 0.2s;
+        }
+
+        .intention-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .intention-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Location Footer */
+        .location-footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 400px) {
+            .container {
+                padding: 16px;
+            }
+
+            .moon-visual {
+                width: 150px;
+                height: 150px;
+            }
+
+            .phase-name {
+                font-size: 1.5rem;
+            }
+
+            .phase-dot {
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+            }
+
+            .moon-card, .ritual-card {
+                padding: 20px 16px;
+                border-radius: 20px;
+            }
+
+            .zodiac-icon {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .moon-visual {
+                width: 140px;
+                height: 140px;
+            }
+
+            .moon-card {
+                padding: 20px;
+            }
+
+            .phase-cycle {
+                margin: 12px 0;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
         }
     </style>
 </head>
 <body>
 
-    <!-- Loading / Standby Card -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div class="loader-moon"></div>
-        <div class="loader-text">Aligning celestial sphere</div>
-        <div class="loader-subtext">Seeking observer coordinates...</div>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-moon"></div>
+        <div class="loading-text">Aligning with the cosmos...</div>
     </div>
 
-    <!-- Main Dashboard -->
+    <!-- Main Container -->
     <div class="container" id="main-container">
         <header>
-            <h1>godrays</h1>
+            <h1 class="logo">godrays</h1>
+            <p class="tagline">Lunar Intelligence</p>
         </header>
 
+        <!-- Phase Cycle Indicator -->
+        <div class="phase-cycle" id="phase-cycle">
+            <div class="phase-dot" data-phase="new" data-name="New">&#127761;</div>
+            <div class="phase-dot" data-phase="waxing-crescent" data-name="Waxing">&#127762;</div>
+            <div class="phase-dot" data-phase="first-quarter" data-name="First">&#127763;</div>
+            <div class="phase-dot" data-phase="waxing-gibbous" data-name="Gibbous">&#127764;</div>
+            <div class="phase-dot" data-phase="full" data-name="Full">&#127765;</div>
+            <div class="phase-dot" data-phase="waning-gibbous" data-name="Waning">&#127766;</div>
+            <div class="phase-dot" data-phase="last-quarter" data-name="Last">&#127767;</div>
+            <div class="phase-dot" data-phase="waning-crescent" data-name="Crescent">&#127768;</div>
+        </div>
+
+        <!-- Moon Card -->
         <div class="moon-card">
-            <div class="moon-visual" id="moon-container">
-                <!-- SVG injected via JS -->
+            <div class="moon-wrapper">
+                <div class="moon-visual" id="moon-container"></div>
             </div>
 
-            <div class="data-section">
-                <div class="phase-name" id="phase-name">Loading...</div>
-                <div class="illumination" id="illumination">--% Illuminated</div>
-                
-                <div class="zodiac-info">
-                    <div class="zodiac-sign" id="zodiac-sign">--</div>
-                    <div class="zodiac-degree" id="zodiac-degree">--</div>
+            <div class="moon-info">
+                <h2 class="phase-name" id="phase-name">Loading...</h2>
+                <div class="illumination" id="illumination">-- Illuminated</div>
+
+                <div class="divider"></div>
+
+                <div class="zodiac-section">
+                    <div class="zodiac-icon" id="zodiac-icon">&#9790;</div>
+                    <div class="zodiac-details">
+                        <div class="zodiac-sign" id="zodiac-sign">--</div>
+                        <div class="zodiac-degree" id="zodiac-degree">--</div>
+                    </div>
                 </div>
 
-                <div class="time-display" id="time-display">
-                    <!-- Dynamic Time -->
-                </div>
-
-                <!-- AI Integration -->
-                <div class="ai-section">
-                    <button id="ai-btn" class="mystic-btn" onclick="getCosmicInsight()">
-                        <span class="btn-text">Receive Cosmic Wisdom</span>
-                        <span class="btn-glow"></span>
-                    </button>
-                    <div id="ai-response" class="ai-message hidden"></div>
-                </div>
+                <div class="time-display" id="time-display"></div>
             </div>
         </div>
 
-        <!-- HIDDEN CONFIG: API Key is now securely handled on the server -->
-        
-        <div class="location-info" id="location-display">
-            <!-- Dynamic Location -->
+        <!-- Ritual Guide Card -->
+        <div class="ritual-card">
+            <div class="ritual-header">
+                <div class="ritual-icon">&#10024;</div>
+                <div>
+                    <div class="ritual-title">Lunar Ritual Guide</div>
+                    <div class="ritual-subtitle">AI-powered guidance for this moon</div>
+                </div>
+            </div>
+
+            <div class="ai-content">
+                <div class="ai-placeholder" id="ai-placeholder">
+                    Enter an intention and receive personalized lunar guidance
+                </div>
+                <div class="ai-response" id="ai-response"></div>
+            </div>
+
+            <div class="intention-section">
+                <label class="intention-label" for="intention-input">Your Intention</label>
+                <textarea
+                    class="intention-input"
+                    id="intention-input"
+                    rows="2"
+                    placeholder="e.g., I want to attract abundance, release old patterns, find clarity..."
+                ></textarea>
+            </div>
+
+            <button class="generate-btn" id="generate-btn" onclick="generateRitualGuide()">
+                <span class="spinner"></span>
+                <span class="btn-text">Generate Ritual Guide</span>
+            </button>
+        </div>
+
+        <!-- Location Footer -->
+        <div class="location-footer" id="location-display">
+            Detecting location...
         </div>
     </div>
 
     <script>
-        // Constants and Helpers
+        // Constants
         const ZODIAC_SIGNS = [
-            "Aries", "Taurus", "Gemini", "Cancer", 
-            "Leo", "Virgo", "Libra", "Scorpio", 
-            "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+            { name: "Aries", symbol: "&#9800;", emoji: "♈" },
+            { name: "Taurus", symbol: "&#9801;", emoji: "♉" },
+            { name: "Gemini", symbol: "&#9802;", emoji: "♊" },
+            { name: "Cancer", symbol: "&#9803;", emoji: "♋" },
+            { name: "Leo", symbol: "&#9804;", emoji: "♌" },
+            { name: "Virgo", symbol: "&#9805;", emoji: "♍" },
+            { name: "Libra", symbol: "&#9806;", emoji: "♎" },
+            { name: "Scorpio", symbol: "&#9807;", emoji: "♏" },
+            { name: "Sagittarius", symbol: "&#9808;", emoji: "♐" },
+            { name: "Capricorn", symbol: "&#9809;", emoji: "♑" },
+            { name: "Aquarius", symbol: "&#9810;", emoji: "♒" },
+            { name: "Pisces", symbol: "&#9811;", emoji: "♓" }
         ];
+
+        const PHASE_MAP = {
+            "New Moon": "new",
+            "Waxing Crescent": "waxing-crescent",
+            "First Quarter": "first-quarter",
+            "Waxing Gibbous": "waxing-gibbous",
+            "Full Moon": "full",
+            "Waning Gibbous": "waning-gibbous",
+            "Last Quarter": "last-quarter",
+            "Waning Crescent": "waning-crescent"
+        };
+
+        // Three.js Globals
+        let scene, camera, renderer, moonMesh, directionalLight;
+        let isThreeInitialized = false;
+        let currentPhaseAngle = 0;
+        let currentLat = 51.4769;
+
+        // Current moon data for AI
+        let currentMoonData = {
+            phase: "",
+            sign: "",
+            illumination: 0
+        };
 
         function getZodiacSign(longitude) {
             let lon = longitude % 360;
             if (lon < 0) lon += 360;
-            
+
             const index = Math.floor(lon / 30);
             const degree = lon % 30;
             return {
-                sign: ZODIAC_SIGNS[index],
+                ...ZODIAC_SIGNS[index],
                 degree: degree
             };
         }
@@ -418,128 +763,168 @@
             return "New Moon";
         }
 
-        function renderMoonSVG(phaseFraction, phaseAngle) {
-            const r = 50; 
-            
-            let angle = phaseAngle % 360;
-            if (angle < 0) angle += 360;
-
-            const isWaxing = angle < 180;
-            const isFull = Math.abs(angle - 180) < 0.1;
-            const isNew = Math.abs(angle) < 0.1 || Math.abs(angle - 360) < 0.1;
-
-            let d = "";
-            const rad = angle * (Math.PI / 180);
-            const terminatorRadius = Math.abs(50 * Math.cos(rad));
-            const sweep = angle < 180 ? 1 : 0; 
-            
-            if (isNew) {
-               d = ""; 
-            } else if (isFull) {
-               d = "M 50,0 A 50,50 0 1,1 50,100 A 50,50 0 1,1 50,0";
-            } else {
-               const limbSweep = (angle < 180) ? 1 : 0;
-               const termSweep = (angle < 90 || angle > 270) ? 1 : 0; 
-               
-               let limbArc = `A 50,50 0 0 ${limbSweep} 50,100`;
-               let termArc = `A ${terminatorRadius},50 0 0 ${termSweep} 50,0`;
-               
-               d = `M 50,0 ${limbArc} ${termArc} Z`;
-            }
-
-            return `
-                <svg viewBox="0 0 100 100" id="moon-svg">
-                    <circle cx="50" cy="50" r="49" class="moon-disc" />
-                    <path d="${d}" class="moon-light" />
-                </svg>
-            `;
+        function updatePhaseCycleIndicator(phaseName) {
+            const phaseKey = PHASE_MAP[phaseName];
+            document.querySelectorAll('.phase-dot').forEach(dot => {
+                dot.classList.remove('active');
+                if (dot.dataset.phase === phaseKey) {
+                    dot.classList.add('active');
+                }
+            });
         }
 
-        // Time updater
+        function initThreeJS(container) {
+            if (isThreeInitialized) return;
+
+            scene = new THREE.Scene();
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            camera.position.z = 5;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.domElement.id = 'moon-canvas';
+            container.innerHTML = '';
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.SphereGeometry(2, 60, 60);
+            const textureLoader = new THREE.TextureLoader();
+
+            const texture = textureLoader.load('img/moon_texture.jpg');
+            const displacement = textureLoader.load('img/moon_displacement.jpg');
+
+            const material = new THREE.MeshStandardMaterial({
+                map: texture,
+                displacementMap: displacement,
+                displacementScale: 0.05,
+                bumpMap: displacement,
+                bumpScale: 0.02,
+                roughness: 1.0,
+                metalness: 0.0
+            });
+
+            moonMesh = new THREE.Mesh(geometry, material);
+            scene.add(moonMesh);
+
+            // Lights
+            directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
+            scene.add(directionalLight);
+
+            const frontLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            frontLight.position.set(0, 0, 10);
+            scene.add(frontLight);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                updateLightPosition();
+                if (moonMesh) {
+                    moonMesh.rotation.y += 0.0002;
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            isThreeInitialized = true;
+
+            const newWidth = container.clientWidth || 180;
+            const newHeight = container.clientHeight || 180;
+            renderer.setSize(newWidth, newHeight);
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+
+            window.addEventListener('resize', () => {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                renderer.setSize(newWidth, newHeight);
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+            });
+        }
+
+        function updateLightPosition() {
+            if (!directionalLight) return;
+
+            const moonAgePercent = currentPhaseAngle / 360;
+            const hemisphereFactor = currentLat >= 0 ? 1 : -1;
+            const waxingFactor = currentPhaseAngle < 180 ? -1 : 1;
+
+            const lightX = hemisphereFactor * Math.sin(2 * Math.PI * moonAgePercent);
+            const lightY = hemisphereFactor * waxingFactor * Math.cos(2 * Math.PI * moonAgePercent);
+            const lightZ = -Math.cos(2 * Math.PI * moonAgePercent);
+
+            directionalLight.position.set(lightX, lightY, lightZ);
+        }
+
+        function updateThreeJSMoon(phaseAngle, lat) {
+            currentPhaseAngle = phaseAngle;
+            currentLat = lat;
+        }
+
         function updateTime() {
             const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const options = {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
             document.getElementById('time-display').innerText = now.toLocaleDateString(undefined, options);
-        }
-
-        // AI Integration
-        async function getCosmicInsight() {
-            const btn = document.getElementById('ai-btn');
-            const output = document.getElementById('ai-response');
-            
-            // UI State: Loading
-            btn.disabled = true;
-            btn.innerText = "Consulting the Stars...";
-            output.classList.remove('visible');
-            output.innerText = "";
-            output.classList.remove('hidden');
-
-            // Gather Context
-            const phase = document.getElementById('phase-name').innerText;
-            const sign = document.getElementById('zodiac-sign').innerText.replace('Moon in ', '');
-            
-            try {
-                const response = await fetch("/api/wisdom", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ phase, sign })
-                });
-
-                if (!response.ok) throw new Error("The stars are silent (Server Error)");
-
-                const data = await response.json();
-                const wisdom = data.wisdom;
-
-                // UI State: Success
-                output.innerText = `"${wisdom}"`;
-                output.classList.add('visible');
-                btn.innerText = "Receive Cosmic Wisdom";
-                btn.disabled = false;
-
-            } catch (error) {
-                console.error(error);
-                output.innerText = "The connection to the ether is weak. Please try again.";
-                output.classList.add('visible');
-                btn.innerText = "Retry";
-                btn.disabled = false;
-            }
         }
 
         function updateDashboard(lat, lon, isDefault = false) {
             const date = new Date();
-            
-            // 1. Calculate Moon Data
+
             const illum = Astronomy.Illumination(Astronomy.Body.Moon, date);
-            
-            // 2. Calculate Zodiac (Geocentric)
             const vector = Astronomy.GeoVector(Astronomy.Body.Moon, date, true);
             const ecliptic = Astronomy.Ecliptic(vector);
             const zodiac = getZodiacSign(ecliptic.elon);
-            
-            // 3. Update DOM
+
             const percent = Math.round(illum.phase_fraction * 100);
-            
-            document.getElementById('phase-name').innerText = getPhaseName(illum.phase_angle);
+            const phaseName = getPhaseName(illum.phase_angle);
+
+            // Update DOM
+            document.getElementById('phase-name').innerText = phaseName;
             document.getElementById('illumination').innerText = `${percent}% Illuminated`;
-            
-            document.getElementById('zodiac-sign').innerText = `Moon in ${zodiac.sign}`;
-            document.getElementById('zodiac-degree').innerText = `at ${zodiac.degree.toFixed(2)}°`;
-            
-            document.getElementById('moon-container').innerHTML = renderMoonSVG(illum.phase_fraction, illum.phase_angle);
-            
-            // Try to guess timezone name for better location context
-            let locationText = `Observer Coordinates: ${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`;
+
+            document.getElementById('zodiac-sign').innerText = `Moon in ${zodiac.name}`;
+            document.getElementById('zodiac-degree').innerText = `${zodiac.degree.toFixed(1)}° ${zodiac.name}`;
+            document.getElementById('zodiac-icon').innerHTML = zodiac.symbol;
+
+            // Update phase cycle indicator
+            updatePhaseCycleIndicator(phaseName);
+
+            // Store for AI
+            currentMoonData = {
+                phase: phaseName,
+                sign: zodiac.name,
+                illumination: percent
+            };
+
+            // Initialize 3D Moon
+            const container = document.getElementById('moon-container');
+            initThreeJS(container);
+            updateThreeJSMoon(illum.phase_angle, lat);
+
+            // Location display
+            let locationText = "";
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                if(tz) locationText += ` (${tz.replace('_', ' ')})`;
-            } catch(e) {}
+                locationText = tz ? tz.replace(/_/g, ' ') : `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+            } catch(e) {
+                locationText = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+            }
 
             if (isDefault) {
-                locationText = "Stargazing from the Void (Default Location)";
+                locationText = "Default Location (Greenwich)";
             }
-            
+
             document.getElementById('location-display').innerText = locationText;
 
             // Start clock
@@ -548,19 +933,78 @@
 
             // Transition UI
             setTimeout(() => {
-                document.getElementById('loading-overlay').classList.add('hidden');
+                document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('main-container').classList.add('visible');
-            }, 800); // Small delay for effect
+            }, 600);
+        }
+
+        // AI Ritual Guide
+        async function generateRitualGuide() {
+            const btn = document.getElementById('generate-btn');
+            const placeholder = document.getElementById('ai-placeholder');
+            const responseDiv = document.getElementById('ai-response');
+            const intention = document.getElementById('intention-input').value.trim();
+
+            // UI Loading state
+            btn.classList.add('loading');
+            btn.disabled = true;
+            placeholder.style.display = 'none';
+            responseDiv.classList.remove('visible');
+
+            try {
+                const response = await fetch("/api/ritual-guide", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        phase: currentMoonData.phase,
+                        sign: currentMoonData.sign,
+                        illumination: currentMoonData.illumination,
+                        intention: intention || "general guidance"
+                    })
+                });
+
+                if (!response.ok) throw new Error("Server error");
+
+                const data = await response.json();
+
+                // Build response HTML
+                responseDiv.innerHTML = `
+                    <div class="ai-section-title">Lunar Insight</div>
+                    <div class="ai-text">"${data.insight}"</div>
+                    <div class="ai-section-title">Recommended Rituals</div>
+                    <div class="ai-rituals">
+                        ${data.rituals.map(r => `
+                            <div class="ritual-item">
+                                <span class="ritual-item-icon">${r.icon}</span>
+                                <span>${r.text}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                responseDiv.classList.add('visible');
+
+            } catch (error) {
+                console.error(error);
+                responseDiv.innerHTML = `
+                    <div class="ai-text" style="color: var(--text-muted);">
+                        Unable to connect to the cosmic realm. Please try again.
+                    </div>
+                `;
+                responseDiv.classList.add('visible');
+            }
+
+            btn.classList.remove('loading');
+            btn.disabled = false;
         }
 
         function init() {
             if (typeof Astronomy === 'undefined') {
-                document.querySelector('.loader-text').innerText = "Stellar Connection Failed";
-                document.querySelector('.loader-subtext').innerText = "Library could not load. Check internet.";
+                document.querySelector('.loading-text').innerText = "Failed to load astronomy library";
                 return;
             }
 
-            let lat = 51.4769; 
+            let lat = 51.4769;
             let lon = -0.0005;
 
             if ("geolocation" in navigator) {
@@ -571,11 +1015,10 @@
                         updateDashboard(lat, lon, false);
                     },
                     (error) => {
-                        console.warn("Geolocation denied/error", error);
-                        // Update with default but mark it
+                        console.warn("Geolocation denied", error);
                         updateDashboard(lat, lon, true);
                     },
-                    { timeout: 10000 } // Wait up to 10s
+                    { timeout: 10000 }
                 );
             } else {
                 updateDashboard(lat, lon, true);
@@ -583,7 +1026,6 @@
         }
 
         window.addEventListener('load', init);
-
     </script>
 </body>
 </html>
