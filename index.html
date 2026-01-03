@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moon Dashboard</title>
     <!-- Astronomy Engine -->
-    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
     <style>
         :root {
             --bg-color: #05070a;
@@ -350,11 +350,11 @@
             const date = new Date();
             
             // 1. Calculate Moon Data
-            // Astronomy.Illumination("Moon", date) returns info about the moon's phase.
-            const illum = Astronomy.Illumination("Moon", date);
+            const illum = Astronomy.Illumination(Astronomy.Body.Moon, date);
             
             // 2. Calculate Zodiac
-            const vector = Astronomy.GeoVector("Moon", date, true);
+            // Use Geocentric for Zodiac signs
+            const vector = Astronomy.GeoVector(Astronomy.Body.Moon, date, true);
             // We usually want geocentric ecliptic coordinates for zodiac
             // But from the observer's location? Astrologers usually use Geocentric (Earth center).
             // However, the prompt asked for "User Location" first, implying Topocentric?
