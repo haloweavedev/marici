@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moon Dashboard</title>
     <!-- Astronomy Engine -->
-    <script src="https://unpkg.com/astronomy-engine/browser/astronomy.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/browser/astronomy.min.js"></script>
     <style>
         :root {
             --bg-color: #05070a;
@@ -383,6 +383,15 @@
         }
 
         function init() {
+            // Check if library loaded
+            if (typeof Astronomy === 'undefined') {
+                document.getElementById('phase-name').innerText = "Error";
+                document.getElementById('illumination').innerText = "Library failed to load.";
+                document.getElementById('location-display').innerText = "Please check your internet connection and reload.";
+                console.error("Astronomy Engine library not loaded.");
+                return;
+            }
+
             // Default location (Null Island-ish or Greenwich)
             let lat = 51.4769; 
             let lon = -0.0005;
@@ -405,8 +414,8 @@
             }
         }
 
-        // Run
-        init();
+        // Run when window is fully loaded (scripts, styles, etc.)
+        window.addEventListener('load', init);
 
     </script>
 </body>
