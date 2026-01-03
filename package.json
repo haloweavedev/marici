@@ -1,0 +1,28 @@
+{
+  "name": "marici",
+  "version": "1.0.0",
+  "description": "**godrays** is a lightweight, single-page \"Moon Dashboard\" built with pure, vanilla web technologies. It provides real-time astrological and astronomical data about the moon, visualized with a dynamic, phase-accurate rendering.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haloweavedev/marici.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/haloweavedev/marici/issues"
+  },
+  "homepage": "https://github.com/haloweavedev/marici#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "groq-sdk": "^0.37.0"
+  }
+}

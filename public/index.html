@@ -214,6 +214,63 @@
             font-style: italic;
         }
 
+        /* AI Section Styles */
+        .ai-section {
+            margin-top: 25px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mystic-btn {
+            background: rgba(196, 215, 237, 0.05);
+            border: 1px solid rgba(196, 215, 237, 0.2);
+            color: var(--accent);
+            padding: 12px 24px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            border-radius: 4px;
+        }
+
+        .mystic-btn:hover {
+            background: rgba(196, 215, 237, 0.15);
+            box-shadow: 0 0 15px var(--moon-glow);
+            letter-spacing: 3px;
+        }
+
+        .mystic-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            letter-spacing: 2px;
+        }
+
+        .ai-message {
+            margin-top: 20px;
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #fff;
+            font-style: italic;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.6s ease-out;
+            min-height: 0;
+            max-width: 90%;
+        }
+
+        .ai-message.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -258,9 +315,20 @@
                 <div class="time-display" id="time-display">
                     <!-- Dynamic Time -->
                 </div>
+
+                <!-- AI Integration -->
+                <div class="ai-section">
+                    <button id="ai-btn" class="mystic-btn" onclick="getCosmicInsight()">
+                        <span class="btn-text">Receive Cosmic Wisdom</span>
+                        <span class="btn-glow"></span>
+                    </button>
+                    <div id="ai-response" class="ai-message hidden"></div>
+                </div>
             </div>
         </div>
 
+        <!-- HIDDEN CONFIG: API Key is now securely handled on the server -->
+        
         <div class="location-info" id="location-display">
             <!-- Dynamic Location -->
         </div>
@@ -341,6 +409,51 @@
             const now = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
             document.getElementById('time-display').innerText = now.toLocaleDateString(undefined, options);
+        }
+
+        // AI Integration
+        async function getCosmicInsight() {
+            const btn = document.getElementById('ai-btn');
+            const output = document.getElementById('ai-response');
+            
+            // UI State: Loading
+            btn.disabled = true;
+            btn.innerText = "Consulting the Stars...";
+            output.classList.remove('visible');
+            output.innerText = "";
+            output.classList.remove('hidden');
+
+            // Gather Context
+            const phase = document.getElementById('phase-name').innerText;
+            const sign = document.getElementById('zodiac-sign').innerText.replace('Moon in ', '');
+            
+            try {
+                const response = await fetch("/api/wisdom", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ phase, sign })
+                });
+
+                if (!response.ok) throw new Error("The stars are silent (Server Error)");
+
+                const data = await response.json();
+                const wisdom = data.wisdom;
+
+                // UI State: Success
+                output.innerText = `"${wisdom}"`;
+                output.classList.add('visible');
+                btn.innerText = "Receive Cosmic Wisdom";
+                btn.disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                output.innerText = "The connection to the ether is weak. Please try again.";
+                output.classList.add('visible');
+                btn.innerText = "Retry";
+                btn.disabled = false;
+            }
         }
 
         function updateDashboard(lat, lon, isDefault = false) {
