@@ -1,8 +1,8 @@
-# Marici: Cosmic Moon Dashboard
+# godrays: Moon Dashboard
 
-**Marici** (named after the Buddhist goddess of light and the dawn) is a lightweight, single-page "Moon Dashboard" built with pure, vanilla web technologies. It provides real-time astrological and astronomical data about the moon, visualized with a dynamic, phase-accurate rendering.
+**godrays** is a lightweight, single-page "Moon Dashboard" built with pure, vanilla web technologies. It provides real-time astrological and astronomical data about the moon, visualized with a dynamic, phase-accurate rendering.
 
-![Moon Dashboard Preview](https://via.placeholder.com/800x400?text=Marici+Moon+Dashboard+Preview)
+![Moon Dashboard Preview](https://via.placeholder.com/800x400?text=godrays+Moon+Dashboard+Preview)
 
 ## ✨ Features
 
