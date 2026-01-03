@@ -750,16 +750,18 @@
             };
         }
 
-        function getPhaseName(phaseAngle) {
-            const p = phaseAngle % 360;
-            if (p < 2) return "New Moon";
-            if (p < 88) return "Waxing Crescent";
-            if (p < 92) return "First Quarter";
-            if (p < 178) return "Waxing Gibbous";
-            if (p < 182) return "Full Moon";
-            if (p < 268) return "Waning Gibbous";
-            if (p < 272) return "Last Quarter";
-            if (p < 358) return "Waning Crescent";
+        // moonPhase is from Astronomy.MoonPhase() which returns 0-360:
+        // 0° = New Moon, 90° = First Quarter, 180° = Full Moon, 270° = Last Quarter
+        function getPhaseName(moonPhase) {
+            const p = moonPhase % 360;
+            if (p < 5 || p >= 355) return "New Moon";
+            if (p < 85) return "Waxing Crescent";
+            if (p < 95) return "First Quarter";
+            if (p < 175) return "Waxing Gibbous";
+            if (p < 185) return "Full Moon";
+            if (p < 265) return "Waning Gibbous";
+            if (p < 275) return "Last Quarter";
+            if (p < 355) return "Waning Crescent";
             return "New Moon";
         }
 
@@ -881,13 +883,19 @@
         function updateDashboard(lat, lon, isDefault = false) {
             const date = new Date();
 
+            // Get moon illumination (for percentage)
             const illum = Astronomy.Illumination(Astronomy.Body.Moon, date);
+
+            // Get moon phase angle (0-360: 0=New, 90=First Quarter, 180=Full, 270=Last Quarter)
+            const moonPhaseAngle = Astronomy.MoonPhase(date);
+
+            // Get zodiac position
             const vector = Astronomy.GeoVector(Astronomy.Body.Moon, date, true);
             const ecliptic = Astronomy.Ecliptic(vector);
             const zodiac = getZodiacSign(ecliptic.elon);
 
             const percent = Math.round(illum.phase_fraction * 100);
-            const phaseName = getPhaseName(illum.phase_angle);
+            const phaseName = getPhaseName(moonPhaseAngle);
 
             // Update DOM
             document.getElementById('phase-name').innerText = phaseName;
@@ -910,7 +918,7 @@
             // Initialize 3D Moon
             const container = document.getElementById('moon-container');
             initThreeJS(container);
-            updateThreeJSMoon(illum.phase_angle, lat);
+            updateThreeJSMoon(moonPhaseAngle, lat);
 
             // Location display
             let locationText = "";
