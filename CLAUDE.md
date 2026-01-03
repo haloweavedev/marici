@@ -20,7 +20,7 @@ npm start              # Start Express server on port 3000 (default)
 ## Architecture
 
 ### Backend (server.js)
-- **Express server** serving static files from `public/` directory
+- **Express server** serving static files from `public/` directory.
 - **Single API endpoint**: `POST /api/wisdom` - generates astrological insights using Groq's LLaMA model
 - **Environment**: CommonJS (not ES modules)
 - **Dependencies**: express, cors, dotenv, groq-sdk
