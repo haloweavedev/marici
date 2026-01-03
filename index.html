@@ -329,115 +329,6 @@
             color: var(--text-muted);
         }
 
-        /* Ritual Card */
-        .ritual-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 16px;
-            transition: all 0.3s var(--ease-out-expo);
-        }
-
-        .ritual-card:hover {
-            border-color: var(--border-glow);
-        }
-
-        .ritual-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .ritual-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .ritual-title {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            color: var(--text-primary);
-        }
-
-        .ritual-subtitle {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        /* AI Response Area */
-        .ai-content {
-            min-height: 80px;
-            position: relative;
-        }
-
-        .ai-placeholder {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .ai-response {
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.5s var(--ease-out-expo);
-        }
-
-        .ai-response.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .ai-section-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--accent-primary);
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .ai-text {
-            font-family: var(--font-display);
-            font-size: 1rem;
-            line-height: 1.6;
-            color: var(--text-primary);
-            font-style: italic;
-            margin-bottom: 16px;
-        }
-
-        .ai-rituals {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .ritual-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            background: var(--bg-secondary);
-            border-radius: 10px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-subtle);
-        }
-
-        .ritual-item-icon {
-            font-size: 1rem;
-        }
-
         /* Generate Button */
         .generate-btn {
             width: 100%;
@@ -494,45 +385,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Intention Input */
-        .intention-section {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .intention-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .intention-input {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            font-family: var(--font-body);
-            font-size: 0.9rem;
-            color: var(--text-primary);
-            resize: none;
-            transition: all 0.2s;
-        }
-
-        .intention-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .intention-input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
         /* Location Footer */
         .location-footer {
             text-align: center;
@@ -562,7 +414,7 @@
                 font-size: 12px;
             }
 
-            .moon-card, .ritual-card {
+            .moon-card, .secretion-card {
                 padding: 20px 16px;
                 border-radius: 20px;
             }
@@ -774,25 +626,33 @@
             font-weight: 600;
         }
 
-        .chrism-info {
+        /* AI Guidance for Fasting */
+        .ai-guidance {
             margin-top: 16px;
-            padding: 14px;
-            background: rgba(246, 211, 101, 0.05);
-            border: 1px solid rgba(246, 211, 101, 0.15);
-            border-radius: 10px;
+            padding: 16px;
+            background: rgba(167, 139, 250, 0.05);
+            border: 1px solid rgba(167, 139, 250, 0.15);
+            border-radius: 12px;
+            display: none;
         }
 
-        .chrism-title {
+        .ai-guidance.visible {
+            display: block;
+        }
+
+        .ai-guidance-text {
             font-family: var(--font-display);
-            font-size: 0.85rem;
-            color: var(--warning);
-            margin-bottom: 8px;
+            font-size: 0.95rem;
+            font-style: italic;
+            color: var(--text-primary);
+            line-height: 1.6;
+            text-align: center;
         }
 
-        .chrism-text {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
+        .ai-guidance-loading {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
         }
 
         @media (max-width: 400px) {
@@ -859,46 +719,13 @@
             </div>
         </div>
 
-        <!-- Ritual Guide Card -->
-        <div class="ritual-card">
-            <div class="ritual-header">
-                <div class="ritual-icon">&#10024;</div>
-                <div>
-                    <div class="ritual-title">Lunar Ritual Guide</div>
-                    <div class="ritual-subtitle">AI-powered guidance for this moon</div>
-                </div>
-            </div>
-
-            <div class="ai-content">
-                <div class="ai-placeholder" id="ai-placeholder">
-                    Enter an intention and receive personalized lunar guidance
-                </div>
-                <div class="ai-response" id="ai-response"></div>
-            </div>
-
-            <div class="intention-section">
-                <label class="intention-label" for="intention-input">Your Intention</label>
-                <textarea
-                    class="intention-input"
-                    id="intention-input"
-                    rows="2"
-                    placeholder="e.g., I want to attract abundance, release old patterns, find clarity..."
-                ></textarea>
-            </div>
-
-            <button class="generate-btn" id="generate-btn" onclick="generateRitualGuide()">
-                <span class="spinner"></span>
-                <span class="btn-text">Generate Ritual Guide</span>
-            </button>
-        </div>
-
-        <!-- Sacred Secretion Card -->
+        <!-- Fasting Calendar -->
         <div class="secretion-card">
             <div class="secretion-header">
                 <div class="secretion-icon">&#9741;</div>
                 <div>
-                    <div class="secretion-title">Sacred Secretion Calendar</div>
-                    <div class="secretion-subtitle">Chrism fasting dates based on your sun sign</div>
+                    <div class="secretion-title">Fasting Calendar</div>
+                    <div class="secretion-subtitle">Select your sun sign</div>
                 </div>
             </div>
 
@@ -907,22 +734,11 @@
             </div>
 
             <div class="fasting-dates" id="fasting-dates">
-                <div class="fasting-intro">
-                    When the Moon transits through <strong id="selected-sign-name">your sign</strong>,
-                    the sacred oil (Chrism) descends through your 33 vertebrae.
-                    These are your upcoming fasting windows:
-                </div>
                 <div id="dates-container">
                     <!-- Generated by JS -->
                 </div>
-                <div class="chrism-info">
-                    <div class="chrism-title">&#128220; About the Sacred Secretion</div>
-                    <div class="chrism-text">
-                        The Chrism (Christ oil) is a sacred fluid that descends from the brain through the 33 vertebrae
-                        when the Moon is in your sun sign. During these 2.5 days each month, fasting and spiritual
-                        practice can help preserve this sacred essence as it makes its journey to the sacral plexus
-                        and back, facilitating spiritual regeneration.
-                    </div>
+                <div class="ai-guidance" id="ai-guidance">
+                    <div class="ai-guidance-text" id="ai-guidance-text"></div>
                 </div>
             </div>
         </div>
