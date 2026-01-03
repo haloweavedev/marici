@@ -19,12 +19,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API Route for Lunar Ritual Guide
 app.post('/api/ritual-guide', async (req, res) => {
+    console.log('[ritual-guide] Request received:', JSON.stringify(req.body));
+
     try {
         const { phase, sign, illumination, intention } = req.body;
 
         if (!phase || !sign) {
+            console.log('[ritual-guide] Error: Missing phase or sign');
             return res.status(400).json({ error: "Moon phase and zodiac sign are required." });
         }
+
+        console.log('[ritual-guide] Checking GROQ_API_KEY:', process.env.GROQ_API_KEY ? 'Present (length: ' + process.env.GROQ_API_KEY.length + ')' : 'MISSING');
 
         const prompt = `You are a wise lunar astrologer and ritual guide. The current moon is a ${phase} at ${illumination}% illumination, positioned in ${sign}.
 
@@ -42,6 +47,8 @@ Respond with ONLY valid JSON in this exact format (no markdown, no code blocks):
 
 Choose appropriate emoji icons for each ritual. Make rituals specific and actionable for this exact moon phase and intention.`;
 
+        console.log('[ritual-guide] Calling Groq API...');
+
         const chatCompletion = await groq.chat.completions.create({
             messages: [{ role: "user", content: prompt }],
             model: "llama-3.3-70b-versatile",
@@ -49,7 +56,10 @@ Choose appropriate emoji icons for each ritual. Make rituals specific and action
             max_tokens: 500
         });
 
+        console.log('[ritual-guide] Groq API response received');
+
         const content = chatCompletion.choices[0]?.message?.content || "";
+        console.log('[ritual-guide] Raw content:', content.substring(0, 200) + '...');
 
         // Parse JSON from response
         let parsed;
@@ -57,7 +67,9 @@ Choose appropriate emoji icons for each ritual. Make rituals specific and action
             // Try to extract JSON if wrapped in code blocks
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+            console.log('[ritual-guide] JSON parsed successfully');
         } catch (parseError) {
+            console.log('[ritual-guide] JSON parse error, using fallback:', parseError.message);
             // Fallback response
             parsed = {
                 insight: "The lunar energies align with your path. Trust the wisdom of this celestial moment.",
@@ -69,11 +81,13 @@ Choose appropriate emoji icons for each ritual. Make rituals specific and action
             };
         }
 
+        console.log('[ritual-guide] Sending response');
         res.json(parsed);
 
     } catch (error) {
-        console.error("Groq API Error:", error);
-        res.status(500).json({ error: "Failed to consult the lunar realm." });
+        console.error('[ritual-guide] ERROR:', error.message);
+        console.error('[ritual-guide] Stack:', error.stack);
+        res.status(500).json({ error: "Failed to consult the lunar realm.", details: error.message });
     }
 });
 
